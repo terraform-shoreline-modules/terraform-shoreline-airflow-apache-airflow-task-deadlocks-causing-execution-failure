@@ -1,0 +1,94 @@
+{
+  "name": "apache_airflow_task_deadlocks_causing_execution_failure",
+  "description": "This incident type involves the Apache Airflow task deadlocking frequently, leading to the failure of task execution. Deadlocking occurs when two or more tasks are waiting for each other to finish before they can proceed. When this happens, the tasks become stuck, and the workflow stops. This can cause significant downtime and impact on the overall performance of the system. It is crucial to identify the root cause of the deadlocking and resolve it promptly to prevent further incidents.",
+  "params": [
+    {
+      "name": "AIRFLOW_WORKER_POD_NAME",
+      "value": ""
+    },
+    {
+      "name": "TASK_NAME",
+      "value": ""
+    },
+    {
+      "name": "NAMESPACE",
+      "value": ""
+    },
+    {
+      "name": "NODE_NAME",
+      "value": ""
+    },
+    {
+      "name": "K8S_CLUSTER_NAME",
+      "value": ""
+    }
+  ],
+  "cells": [
+    {
+      "name": "cell_1",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Apache Airflow Task Deadlocks Causing Execution Failure\nThis incident type involves the Apache Airflow task deadlocking frequently, leading to the failure of task execution. Deadlocking occurs when two or more tasks are waiting for each other to finish before they can proceed. When this happens, the tasks become stuck, and the workflow stops. This can cause significant downtime and impact on the overall performance of the system. It is crucial to identify the root cause of the deadlocking and resolve it promptly to prevent further incidents."
+    },
+    {
+      "name": "cell_2",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the task is in a deadlock state"
+    },
+    {
+      "name": "cell_3",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | `kubectl exec -it -n ${NAMESPACE} ${AIRFLOW_WORKER_POD_NAME} ps aux | grep ${TASK_NAME}`"
+    },
+    {
+      "name": "cell_4",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the task is stuck waiting for another task to finish"
+    },
+    {
+      "name": "cell_5",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | namespace=$NAMESPACE | `kubectl exec -it -n ${NAMESPACE} ${AIRFLOW_WORKER_POD_NAME} ps aux | grep ${TASK_NAME} | grep \"waiting on\"`"
+    },
+    {
+      "name": "cell_6",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if the resource limits for the Airflow worker pod are set correctly"
+    },
+    {
+      "name": "cell_7",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl describe pod -n ${NAMESPACE} ${AIRFLOW_WORKER_POD_NAME} | grep \"Limits\"`"
+    },
+    {
+      "name": "cell_8",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Check if there are any resource constraints on the node where the Airflow worker pod is running"
+    },
+    {
+      "name": "cell_9",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | limit=1 | random=1 | `kubectl describe node ${NODE_NAME} | grep \"Capacity\" -A 5`"
+    },
+    {
+      "name": "cell_10",
+      "type": "MARKDOWN",
+      "enabled": true,
+      "content": "## Modify the task code to handle the deadlocking situation. This may involve adding a timeout function or implementing a retry mechanism."
+    },
+    {
+      "name": "cell_11",
+      "type": "OP_LANG",
+      "enabled": true,
+      "content": "pod | k8s_cluster_name=$K8S_CLUSTER_NAME | app='shoreline' | random=1 | limit=1 | invoke_timeout_task($TASK_NAME, $NAMESPACE)"
+    }
+  ]
+}
